@@ -42,14 +42,21 @@ public class RunBot implements Runnable{
                                 continue;
                         }
                         JSONArray data = msgJson.getJSONArray("data");
-                        for (int i = 0;i < data.size();i++){
-                                JSONObject temp = JSONObject.parseObject(data.get(i).toString());
-                                if (temp.get("type") != "GroupMessage") continue;
+                        for (Object datum : data) {
+                                JSONObject temp = JSONObject.parseObject(datum.toString());
+
+                                if (!temp.get("type").toString().equals("GroupMessage")) continue;
+                                JSONObject sender = temp.getJSONObject("sender");
+                                JSONObject group = sender.getJSONObject("group");
+                                Long id = group.getLong("id");
+
                                 JSONArray messageChain = temp.getJSONArray("messageChain");
-                                for (int j = 0;j < messageChain.size(); j++){
-                                        JSONObject t = JSONObject.parseObject(data.get(j).toString());
-                                        if (t.get("type") != "Plain") continue;
+                                for (Object o : messageChain) {
+                                        JSONObject t = JSONObject.parseObject(o.toString());
+                                        if (!t.get("type").equals("Plain")) continue;
                                         String message = t.get("text").toString();
+                                        BotProcessCommandFromChat.processCommand(url, session, message, id);
+
                                 }
 
                         }
@@ -57,7 +64,7 @@ public class RunBot implements Runnable{
                 }
                 releaseSession(url,session,qq);
         }
-        public void closeBot(){
+        public static void closeBot(){
                 flag = false;
         }
 }

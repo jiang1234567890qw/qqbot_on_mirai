@@ -1,12 +1,12 @@
 package to.qc.qiyu.Utils;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import to.qc.qiyu.console.OutPut;
 
 import java.io.IOException;
 
-import static java.lang.Thread.sleep;
 
 
 public class BotNetWorkUtils {
@@ -79,7 +79,7 @@ public class BotNetWorkUtils {
         }
     }
     public static JSONObject getOldestMessageAndRemove(String url, String session,int count) throws IOException {
-        String target = url +"fetchMessage?sessionKey="+session+"&count="+count;
+        String target = url +"/fetchMessage?sessionKey="+session+"&count="+count;
         JSONObject revJson = JSONObject.parseObject(HttpUtils.sendGetRequest(target));
         if (!(revJson.getIntValue("code") == 0)){
             return null;
@@ -88,7 +88,7 @@ public class BotNetWorkUtils {
         }
     }
     public static JSONObject getLatestMessageAndRemove(String url, String session,int count) throws IOException {
-        String target = url +"fetchLatestMessage?sessionKey="+session+"&count="+count;
+        String target = url +"/fetchLatestMessage?sessionKey="+session+"&count="+count;
         JSONObject revJson = JSONObject.parseObject(HttpUtils.sendGetRequest(target));
         if (!(revJson.getIntValue("code") == 0)){
             return null;
@@ -97,7 +97,7 @@ public class BotNetWorkUtils {
         }
     }
     public static JSONObject getOldestMessageButNotRemove(String url, String session,int count) throws IOException {
-        String target = url +"peekMessage?sessionKey="+session+"&count="+count;
+        String target = url +"/peekMessage?sessionKey="+session+"&count="+count;
         JSONObject revJson = JSONObject.parseObject(HttpUtils.sendGetRequest(target));
         if (!(revJson.getIntValue("code") == 0)){
             return null;
@@ -106,12 +106,44 @@ public class BotNetWorkUtils {
         }
     }
     public static JSONObject getLatestMessageButNotRemove(String url, String session,int count) throws IOException {
-        String target = url +"peekLatestMessage?sessionKey="+session+"&count="+count;
+        String target = url +"/peekLatestMessage?sessionKey="+session+"&count="+count;
         JSONObject revJson = JSONObject.parseObject(HttpUtils.sendGetRequest(target));
         if (!(revJson.getIntValue("code") == 0)){
             return null;
         }else {
             return revJson;
         }
+    }
+    public static int sendPlainMessage(String url,String session,String msg,Long target) throws IOException {
+        String targetURL = url + "/sendGroupMessage";
+        JSONObject sendJson = new JSONObject();
+        sendJson.put("sessionKey",session);
+        sendJson.put("target",target);
+        JSONObject messageJson = new JSONObject();
+        messageJson.put("type","Plain");
+        messageJson.put("text",msg);
+        JSONArray messageChain = new JSONArray();
+        messageChain.add(messageJson);
+            sendJson.put("messageChain",messageChain);
+        JSONObject revJson = JSON.parseObject(HttpUtils.sendJsonPostRequest(targetURL,sendJson.toString()));
+        System.out.println(revJson);
+        if (revJson.getIntValue("code") != 0){
+            return -1;
+        }
+        return revJson.getIntValue("messageId");
+
+    }
+    public static int sendMessage(String url, String session, JSONArray msg, Long target) throws IOException {
+        String targetURL = url + "/sendGroupMessage";
+        JSONObject sendJson = new JSONObject();
+        sendJson.put("sessionKey",session);
+        sendJson.put("target",target);
+        sendJson.put("messageChain",msg);
+        JSONObject revJson = JSON.parseObject(HttpUtils.sendJsonPostRequest(targetURL,sendJson.toString()));
+        if (revJson.getIntValue("code") != 0){
+            return -1;
+        }
+        return revJson.getIntValue("messageId");
+
     }
 }

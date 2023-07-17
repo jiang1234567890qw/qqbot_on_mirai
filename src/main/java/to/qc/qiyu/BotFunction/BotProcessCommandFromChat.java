@@ -15,7 +15,7 @@ public class BotProcessCommandFromChat {
 
         System.out.println(msgArray[0]);
         switch (msgArray[0]){
-            case "命令1":
+            case "今日人品":
                 BotNetWorkUtils.sendPlainMessage(url,session,"对于命令1的回复",replyId);
                 break;
             case "命令2":

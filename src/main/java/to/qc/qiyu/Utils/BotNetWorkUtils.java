@@ -114,8 +114,7 @@ public class BotNetWorkUtils {
             return revJson;
         }
     }
-    public static int sendPlainMessage(String url,String session,String msg,Long target) throws IOException {
-        String targetURL = url + "/sendGroupMessage";
+    public static int sendPlainMessageToGroup(String url, String session, String msg, Long target) throws IOException {
         JSONObject sendJson = new JSONObject();
         sendJson.put("sessionKey",session);
         sendJson.put("target",target);
@@ -124,26 +123,31 @@ public class BotNetWorkUtils {
         messageJson.put("text",msg);
         JSONArray messageChain = new JSONArray();
         messageChain.add(messageJson);
-            sendJson.put("messageChain",messageChain);
-        JSONObject revJson = JSON.parseObject(HttpUtils.sendJsonPostRequest(targetURL,sendJson.toString()));
-        System.out.println(revJson);
-        if (revJson.getIntValue("code") != 0){
-            return -1;
-        }
-        return revJson.getIntValue("messageId");
-
+        return sendMessageToGroup(url,session,messageChain,target);
     }
-    public static int sendMessage(String url, String session, JSONArray msg, Long target) throws IOException {
+    public static int sendMessageToGroup(String url, String session, JSONArray msgChain, Long target) throws IOException {
         String targetURL = url + "/sendGroupMessage";
         JSONObject sendJson = new JSONObject();
         sendJson.put("sessionKey",session);
         sendJson.put("target",target);
-        sendJson.put("messageChain",msg);
+        sendJson.put("messageChain",msgChain);
         JSONObject revJson = JSON.parseObject(HttpUtils.sendJsonPostRequest(targetURL,sendJson.toString()));
         if (revJson.getIntValue("code") != 0){
             return -1;
         }
         return revJson.getIntValue("messageId");
-
+    }
+    public static JSONObject getMemberList(String url ,String session,Long target) throws IOException {
+        String URL = url+"/memberList?sessionKey="+session+"&target="+target;
+        JSONObject memberList = JSONObject.parseObject(HttpUtils.sendGetRequest(URL));
+        if (memberList.getIntValue("code") != 0){
+            OutPut.print("E","获取群成员列表失败");
+            return null;
+        }
+        return memberList;
+    }
+    public static JSONObject getMemberProfile(String url,String session,Long groupId,Long memberId) throws IOException {
+        String targetURL = url + "/memberProfile?sessionKey="+session+"&target="+groupId+"&memberId="+memberId;
+        return JSONObject.parseObject(HttpUtils.sendGetRequest(targetURL));
     }
 }

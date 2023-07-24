@@ -9,9 +9,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class HashDB implements Runnable{
-    public HashMap<Integer, JSONObject> DailyDB;
-    public HashMap<Integer,JSONObject> HalfDayDB;
-    public HashMap<Integer,JSONObject> TimingDB;
+    public static HashMap<Long, JSONObject> dailyDB = new HashMap<>();
+    public static HashMap<Integer,JSONObject> halfDayDB = new HashMap<>();
+    public static HashMap<Integer,JSONObject> timingDB = new HashMap<>();
+    public static HashMap<Long,JSONObject> groupMemberCache = new HashMap<>();
     private boolean flag = true;
 
     @Override
@@ -32,7 +33,7 @@ public class HashDB implements Runnable{
         // 执行任务
         scheduledExecutorService.scheduleAtFixedRate(() -> {
             //每天凌晨1点清理
-            writeDailyCleanDB(114514, (JSONObject) new JSONObject().put("cleanAll",true));
+            writeDailyCleanDB(114514L, (JSONObject) new JSONObject().put("cleanAll",true));
         }, ss, 60*60*24, TimeUnit.SECONDS);
         Calendar c1 = Calendar.getInstance();
         c1.add(Calendar.HOUR, 13);
@@ -42,26 +43,29 @@ public class HashDB implements Runnable{
         scheduledExecutorService.scheduleAtFixedRate(() -> {
             //每天1,13点清理
             writeHalfDayCleanDB(114514, (JSONObject) new JSONObject().put("cleanAll",true));
-        }, ss>ss1?ss1:ss, 60*60*12, TimeUnit.SECONDS);
+        }, Math.min(ss, ss1), 60*60*12, TimeUnit.SECONDS);
 
     }
-    public synchronized void writeDailyCleanDB(int qq,JSONObject data){
+    public static synchronized void writeDailyCleanDB(Long qq,JSONObject data){
         if ((qq==114514) && data.getBoolean("cleanAll")){
-            DailyDB.clear();
+            dailyDB.clear();
             return ;
         }
-        DailyDB.put(qq,data);
+        dailyDB.put(qq,data);
     }
     public synchronized void writeHalfDayCleanDB(int qq,JSONObject data){
         if ((qq==114514) && data.getBoolean("cleanAll")){
-            HalfDayDB.clear();
+            halfDayDB.clear();
             return ;
         }
-        HalfDayDB.put(qq,data);
+        halfDayDB.put(qq,data);
     }
     public synchronized void writeTimingDB(int qq,JSONObject data){
-        TimingDB.put(qq,data);
+        timingDB.put(qq,data);
         //未完成
+    }
+    public synchronized void writeGroupMemberCache(Long a,JSONObject b){
+        groupMemberCache.put(a,b);
     }
     public void stop(){
         flag = false;

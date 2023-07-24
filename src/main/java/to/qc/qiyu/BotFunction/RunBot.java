@@ -49,13 +49,13 @@ public class RunBot implements Runnable{
                                 JSONObject sender = temp.getJSONObject("sender");
                                 JSONObject group = sender.getJSONObject("group");
                                 Long id = group.getLong("id");
-
+                                Long senderId = sender.getLongValue("id");
                                 JSONArray messageChain = temp.getJSONArray("messageChain");
                                 for (Object o : messageChain) {
                                         JSONObject t = JSONObject.parseObject(o.toString());
                                         if (!t.get("type").equals("Plain")) continue;
                                         String message = t.get("text").toString();
-                                        BotProcessCommandFromChat.processCommand(url, session, message, id);
+                                        BotProcessCommandFromChat.processCommandFromGroup(url, session, message, id,senderId);
 
                                 }
 

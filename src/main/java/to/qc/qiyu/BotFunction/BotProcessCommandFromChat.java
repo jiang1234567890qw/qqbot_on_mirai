@@ -75,7 +75,8 @@ public class BotProcessCommandFromChat {
 
         msg1.put("type","Plain");
 
-        if (HashDB.dailyDB.get(senderId)==null || HashDB.dailyDB.get(senderId).getBoolean("isGotWife") == null ||!HashDB.dailyDB.get(senderId).getBoolean("isGotWife")) {
+        if (HashDB.dailyDB.get(senderId)==null || HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()) == null || HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()).getBoolean("isGotWife") == null || //防止null
+                !HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()).getBoolean("isGotWife")) {
 
             Long targetId;
             while (true) {
@@ -89,21 +90,16 @@ public class BotProcessCommandFromChat {
             wifeNickName = wifeProfile.getString("nickname");
             msg1.put("text", "\n今天你的老婆是" + wifeNickName + "(" + wifeId + ")");
 
-            JSONObject j;
-            if (HashDB.dailyDB.get(senderId) == null){
-                j = new JSONObject();
-            }else {
-                j = HashDB.dailyDB.get(senderId);
-            }
-
+            JSONObject j = new JSONObject();
             j.put("isGotWife", true);
             j.put("wifeNickName", wifeNickName);
             j.put("wifeId", wifeId);
-            HashDB.writeDailyCleanDB(senderId, j);
+
+            writeUserDataToDailyDB(groupId,senderId,j);
 
         }else {
-            wifeNickName = HashDB.dailyDB.get(senderId).getString("wifeNickName");
-            wifeId = HashDB.dailyDB.get(senderId).getLongValue("wifeId");
+            wifeNickName = HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()).getString("wifeNickName");
+            wifeId = HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()).getLongValue("wifeId");
             msg1.put("text","\n今天你已经取过了，ta是"+wifeNickName+"("+wifeId+")");
         }
 
@@ -127,20 +123,16 @@ public class BotProcessCommandFromChat {
 
         msg1.put("type","Plain");
 
-        if (HashDB.dailyDB.get(senderId)==null || HashDB.dailyDB.get(senderId).getBoolean("isGotLucky") == null ||!HashDB.dailyDB.get(senderId).getBoolean("isGotLucky")) {
+        if (HashDB.dailyDB.get(senderId) == null || HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString())==null || HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()).getBoolean("isGotLucky") == null
+                || !HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()).getBoolean("isGotLucky")) {
             int lucky = random.nextInt(200) - 100;
             msg1.put("text", "\n今天你的幸运值是" + lucky);
-            JSONObject j;
-            if (HashDB.dailyDB.get(senderId) == null){
-                j = new JSONObject();
-            }else {
-                j = HashDB.dailyDB.get(senderId);
-            }
+            JSONObject j = new JSONObject();
             j.put("isGotLucky",true);
             j.put("lucky",lucky);
-            HashDB.writeDailyCleanDB(senderId,j);
+            writeUserDataToDailyDB(groupId,senderId,j);
         }else {
-            msg1.put("text", "\n今天你已经使用过了,幸运值是" + HashDB.dailyDB.get(senderId).getIntValue("lucky"));
+            msg1.put("text", "\n今天你已经使用过了,幸运值是" + HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()).getIntValue("lucky"));
         }
         msgChain.add(0,msg0);
         msgChain.add(1,msg1);
@@ -158,24 +150,43 @@ public class BotProcessCommandFromChat {
 
         msg1.put("type","Plain");
 
-        if (HashDB.dailyDB.get(senderId)==null || HashDB.dailyDB.get(senderId).getBoolean("isGotLuckyLevel") == null||!HashDB.dailyDB.get(senderId).getBoolean("isGotLuckyLevel")) {
+        if (HashDB.dailyDB.get(senderId) == null ||HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString())==null || HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()).getBoolean("isGotLuckyLevel") == null
+                ||!HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()).getBoolean("isGotLuckyLevel")) {
             int luckyNum = random.nextInt(4);
             msg1.put("text", "\n今天你的运势是" + luckyLevel[luckyNum]);
-            JSONObject j;
-            if (HashDB.dailyDB.get(senderId) == null){
-                 j = new JSONObject();
-            }else {
-                 j = HashDB.dailyDB.get(senderId);
-            }
+            JSONObject j = new JSONObject();
             j.put("isGotLuckyLevel",true);
             j.put("luckyLevel",luckyNum);
-            HashDB.writeDailyCleanDB(senderId,j);
+            writeUserDataToDailyDB(groupId,senderId,j);
 
         }else {
-            msg1.put("text", "\n今天你已经使用过了,运势是" + luckyLevel[HashDB.dailyDB.get(senderId).getIntValue("luckyLevel")]);
+            msg1.put("text", "\n今天你已经使用过了,运势是" + luckyLevel[HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()).getIntValue("luckyLevel")]);
         }
         msgChain.add(0,msg0);
         msgChain.add(1,msg1);
         BotNetWorkUtils.sendMessageToGroup(url,session,msgChain,groupId);
     }
+    private static void writeUserDataToDailyDB(Long groupId,Long senderId,JSONObject data){
+        JSONObject j;
+        JSONObject j1;
+
+
+        if (HashDB.dailyDB.get(senderId) == null){
+            j = new JSONObject();
+            j1 = new JSONObject();
+        }else {
+            j = HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString());
+            if ( HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString()) == null){
+                j1 = new JSONObject();
+            }else {
+                j1 = HashDB.dailyDB.get(senderId).getJSONObject(groupId.toString());
+            }
+        }
+        j1.putAll(data);
+        j.put(groupId.toString(),j1);
+        HashDB.writeDailyCleanDB(senderId,j);
+
+
+    }
 }
+
